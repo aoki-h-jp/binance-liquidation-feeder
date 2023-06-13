@@ -1,5 +1,10 @@
 import websocket
 import datetime
+import configparser
+import requests
+
+config_ini = configparser.ConfigParser()
+config_ini.read('../config.ini', encoding='utf-8')
 
 
 class BinanceLiquidationFeeder:
@@ -42,6 +47,30 @@ class BinanceLiquidationFeeder:
         print(f"==> average_price: {self.average_price} USDT")
         print(f"==> liq_amount_in_USDT: {amount} USDT")
         print("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+
+    def notify_discord(self):
+        amount = int(self.order_quantity * self.average_price)
+        message = "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n"
+        message += f"==> symbol={self.symbol}\n"
+        message += f"==> side={self.side} | \n"
+        if self.side == "BUY":
+            message += "shorts liquidated\n"
+        else:
+            message += "longs liquidated\n"
+
+        message += f"==> order_quantity: {self.order_quantity} {self.symbol.replace('USDT', '')}\n"
+        message += f"==> event_time: {self.event_time}\n"
+        message += f"==> order_last_filled_quantity: {self.order_last_filled_quantity} " \
+                   f"{self.symbol.replace('USDT', '')}\n"
+        message += f"==> order_filled_accumulated_quantity: {self.order_filled_accumulated_quantity} " \
+                   f"{self.symbol.replace('USDT', '')}\n"
+        message += f"==> order_trade_time: {self.order_trade_time}\n"
+        message += f"==> price: {self.price} USDT\n"
+        message += f"==> average_price: {self.average_price} USDT\n"
+        message += f"==> liq_amount_in_USDT: {amount} USDT\n"
+
+        self.post_discord(message=message)
+
 
     def on_open(self, ws):
         """
@@ -90,6 +119,20 @@ class BinanceLiquidationFeeder:
                     self.order_trade_time = japan_time
 
         self.print_result()
+        if config_ini.get('NOTIFY', 'DISCORD_WEBHOOK_URL') != 'YOUR_DISCORD_WEBHOOK_URL':
+            self.notify_discord()
+
+    @staticmethod
+    def post_discord(
+            message: str,
+            webhook_url=config_ini.get('NOTIFY', 'DISCORD_WEBHOOK_URL'),
+            username='binance-liquidation-feeder'
+    ):
+        data = {
+            "content": message,
+            "username": username
+        }
+        requests.post(webhook_url, json=data)
 
 
 liq = BinanceLiquidationFeeder()
