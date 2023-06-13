@@ -52,3 +52,6 @@ SLACK_WEBHOOK_URL = https://hooks.slack.com/services/XXXXXX/XXXXXXX/XXXXXXXXXXX
 ```
 
 - Start up in the same way as above, and you are done!
+
+![Discord sample](./img/Discord_sample.jpg)
+![Slack sample](./img/Slack_sample.jpg)
