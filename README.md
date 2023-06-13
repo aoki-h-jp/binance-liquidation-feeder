@@ -12,7 +12,8 @@ pip install git+https://github.com/aoki-h-jp/binance-liquidation-feeder
 
 # How to use
 ```python
-> python feeder/feeder.py
+> cd feeder
+> python feeder.py
 
 -+-+-+-+-Open connection-+-+-+-+-
 ==> symbol=AXSUSDT
