@@ -1,3 +1,4 @@
+[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110//)
 # binance-liquidation-feeder
 Notify liquidation on Binance.
 
@@ -5,7 +6,7 @@ Notify liquidation on Binance.
 This is work in progress.
 
 # Installation
-```python
+```shell
 pip install git+https://github.com/aoki-h-jp/binance-liquidation-feeder
 ```
 
@@ -38,3 +39,13 @@ pip install git+https://github.com/aoki-h-jp/binance-liquidation-feeder
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 ```
+## Notify by discord
+- Please issue a webhook URL on Discord. like https://discordapp.com/api/webhooks/XXXXXX/XXXXX
+- and set the URL in `config.ini` as follows.
+
+```shell
+[NOTIFY]
+DISCORD_WEBHOOK_URL = https://discordapp.com/api/webhooks/XXXXXX/XXXXX 
+```
+
+- Start up in the same way as above, and you are done!
