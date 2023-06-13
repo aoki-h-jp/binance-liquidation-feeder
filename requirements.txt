@@ -1,0 +1,4 @@
+binance-futures-connector
+requests
+websocket-client~=1.5.1
+setuptools~=50.3.2
