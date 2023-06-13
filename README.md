@@ -39,13 +39,16 @@ pip install git+https://github.com/aoki-h-jp/binance-liquidation-feeder
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 ```
-## Notify by discord
-- Please issue a webhook URL on Discord. like https://discordapp.com/api/webhooks/XXXXXX/XXXXX
+## Notify by Discord or Slack
+- Please issue a webhook URL on Discord or Slack.
+- (Discord) https://discordapp.com/api/webhooks/XXXXXX/XXXXX
+- (Slack) https://hooks.slack.com/services/XXXXXX/XXXXXXX/XXXXXXXXXXX
 - and set the URL in `config.ini` as follows.
 
 ```shell
 [NOTIFY]
 DISCORD_WEBHOOK_URL = https://discordapp.com/api/webhooks/XXXXXX/XXXXX 
+SLACK_WEBHOOK_URL = https://hooks.slack.com/services/XXXXXX/XXXXXXX/XXXXXXXXXXX
 ```
 
 - Start up in the same way as above, and you are done!
