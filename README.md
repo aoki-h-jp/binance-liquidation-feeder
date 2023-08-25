@@ -2,9 +2,6 @@
 # binance-liquidation-feeder
 Notify liquidation on Binance.
 
-## Note
-This is work in progress.
-
 # Installation
 ```shell
 pip install git+https://github.com/aoki-h-jp/binance-liquidation-feeder
