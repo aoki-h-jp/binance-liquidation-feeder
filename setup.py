@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="binance-liquidation-feeder",
-    version=__import__("binance_liquidation_feeder").__version__,
+    version="1.0.1",
     packages=["binance_liquidation_feeder"],
     description="Notify liquidation on Binance.",
     author="aoki-h-jp",

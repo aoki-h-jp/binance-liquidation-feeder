@@ -1,5 +1,7 @@
+# import standard library
 import datetime
 
+# import third-party library
 import requests
 import websocket
 
