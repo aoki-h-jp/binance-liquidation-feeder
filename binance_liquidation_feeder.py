@@ -1,19 +1,14 @@
-import websocket
 import datetime
-import configparser
-import requests
 
-config_ini = configparser.ConfigParser()
-config_ini.read('../config.ini', encoding='utf-8')
+import requests
+import websocket
 
 
 class BinanceLiquidationFeeder:
-    def __init__(self):
+    def __init__(self, discord_webhook_url=None, slack_webhook_url=None):
         self.socket = "wss://fstream.binance.com/ws/!forceOrder@arr"
         self.ws = websocket.WebSocketApp(
-            self.socket,
-            on_message=self.on_message,
-            on_open=self.on_open
+            self.socket, on_message=self._on_message, on_open=self.on_open
         )
         self.symbol: str = ""
         self.order_quantity = 0
@@ -24,8 +19,10 @@ class BinanceLiquidationFeeder:
         self.order_last_filled_quantity = 0.0
         self.order_filled_accumulated_quantity = 0
         self.order_trade_time = 0
+        self._discord_webhook_url = discord_webhook_url
+        self._slack_webhook_url = slack_webhook_url
 
-    def print_result(self):
+    def _print_result(self):
         """
         Print liquidated orders.
         :return: None
@@ -38,17 +35,24 @@ class BinanceLiquidationFeeder:
         else:
             print("longs liquidated")
 
-        print(f"==> order_quantity: {self.order_quantity} {self.symbol.replace('USDT', '')}")
+        print(
+            f"==> order_quantity: {self.order_quantity} {self.symbol.replace('USDT', '')}"
+        )
         print(f"==> event_time: {self.event_time}")
-        print(f"==> order_last_filled_quantity: {self.order_last_filled_quantity} {self.symbol.replace('USDT', '')}")
-        print(f"==> order_filled_accumulated_quantity: {self.order_filled_accumulated_quantity} {self.symbol.replace('USDT', '')}")
+        print(
+            f"==> order_last_filled_quantity: {self.order_last_filled_quantity} {self.symbol.replace('USDT', '')}"
+        )
+        print(
+            f"==> order_filled_accumulated_quantity: {self.order_filled_accumulated_quantity} {self.symbol.replace('USDT', '')}"
+        )
         print(f"==> order_trade_time: {self.order_trade_time}")
         print(f"==> price: {self.price} USDT")
         print(f"==> average_price: {self.average_price} USDT")
         print(f"==> liq_amount_in_USDT: {amount} USDT")
         print("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
 
-    def on_open(self, ws):
+    @staticmethod
+    def on_open(ws):
         """
         Message when open connection.
 
@@ -57,7 +61,7 @@ class BinanceLiquidationFeeder:
         """
         print("-+-+-+-+-Open connection-+-+-+-+-")
 
-    def on_message(self, ws, message):
+    def _on_message(self, ws, message):
         """
         Fetch liquidation order streams.
 
@@ -66,7 +70,12 @@ class BinanceLiquidationFeeder:
         :return: None
         """
         for item in message.split(","):
-            item = item.replace("}", "").replace("{", "").replace('"', "").replace("o:s:", "s:")
+            item = (
+                item.replace("}", "")
+                .replace("{", "")
+                .replace('"', "")
+                .replace("o:s:", "s:")
+            )
             if "forceOrder" not in item:
                 _item = item.split(":")
                 if _item[0] == "E":
@@ -94,88 +103,52 @@ class BinanceLiquidationFeeder:
                     japan_time = datetime.datetime.fromtimestamp(timestamp_sec, jst)
                     self.order_trade_time = japan_time
 
-        self.print_result()
-        if config_ini.get('NOTIFY', 'DISCORD_WEBHOOK_URL') != 'YOUR_DISCORD_WEBHOOK_URL':
-            self.post_discord()
-        if config_ini.get('NOTIFY', 'SLACK_WEBHOOK_URL') != 'YOUR_SLACK_WEBHOOK_URL':
-            self.post_slack()
+        self._print_result()
+        if self._discord_webhook_url is not None:
+            self._post_discord()
+        if self._slack_webhook_url is not None:
+            self._post_slack()
 
-    def post_discord(self,
-                     webhook_url=config_ini.get('NOTIFY', 'DISCORD_WEBHOOK_URL'),
-                     username='binance-liquidation-feeder'
-                     ):
+    def _post_discord(self, username="binance-liquidation-feeder"):
         data = {
             "username": username,
             "embeds": [
                 {
                     "title": "Liquidated!",
-                    "color": 0x206694 if self.side == 'BUY' else 0x992d22,
+                    "color": 0x206694 if self.side == "BUY" else 0x992D22,
                     "fields": [
-                        {
-                            "name": "symbol",
-                            "value": self.symbol,
-                            "inline": True
-                        },
-                        {
-                            "name": "side",
-                            "value": self.side,
-                            "inline": True
-                        },
+                        {"name": "symbol", "value": self.symbol, "inline": True},
+                        {"name": "side", "value": self.side, "inline": True},
                         {
                             "name": "liquidated side",
-                            "value": "shorts liquidated" if self.side == 'BUY' else "longs liquidated",
-                            "inline": True
+                            "value": "shorts liquidated"
+                            if self.side == "BUY"
+                            else "longs liquidated",
+                            "inline": True,
                         },
-                        # {
-                        #     "name": "order_quantity",
-                        #     "value": self.order_quantity,
-                        #     "inline": True
-                        # },
-                        # {
-                        #     "name": "order_last_filled_quantity",
-                        #     "value": self.order_last_filled_quantity,
-                        #     "inline": True
-                        # },
-                        # {
-                        #     "name": "order_filled_accumulated_quantity",
-                        #     "value": self.order_filled_accumulated_quantity,
-                        #     "inline": True
-                        # },
-                        # {
-                        #     "name": "order_trade_time",
-                        #     "value": self.order_trade_time,
-                        #     "inline": True
-                        # },
                         {
                             "name": "price",
-                            "value": str(self.price) + ' USDT',
-                            "inline": True
+                            "value": str(self.price) + " USDT",
+                            "inline": True,
                         },
-                        # {
-                        #     "name": "average_price",
-                        #     "value": self.average_price,
-                        #     "inline": True
-                        # },
                         {
                             "name": "liq_amount_in_USDT",
-                            "value": str(int(self.order_quantity * self.average_price)) + ' USDT',
-                            "inline": True
+                            "value": str(int(self.order_quantity * self.average_price))
+                            + " USDT",
+                            "inline": True,
                         },
-                    ]
+                    ],
                 }
-            ]
+            ],
         }
-        requests.post(webhook_url, json=data)
+        requests.post(self._discord_webhook_url, json=data)
 
-    def post_slack(self,
-                   webhook_url=config_ini.get('NOTIFY', 'SLACK_WEBHOOK_URL'),
-                   username='binance-liquidation-feeder'
-                   ):
+    def _post_slack(self, username="binance-liquidation-feeder"):
         data = {
             "attachments": [
                 {
                     "author_name": username,
-                    "color": "good" if self.side == 'BUY' else "danger",
+                    "color": "good" if self.side == "BUY" else "danger",
                     "fields": [
                         {
                             "title": "symbol",
@@ -187,42 +160,21 @@ class BinanceLiquidationFeeder:
                         },
                         {
                             "title": "liquidated side",
-                            "value": "shorts liquidated" if self.side == 'BUY' else "longs liquidated",
+                            "value": "shorts liquidated"
+                            if self.side == "BUY"
+                            else "longs liquidated",
                         },
-                        # {
-                        #     "title": "order_quantity",
-                        #     "value": self.order_quantity,
-                        # },
-                        # {
-                        #     "title": "order_last_filled_quantity",
-                        #     "value": self.order_last_filled_quantity,
-                        # },
-                        # {
-                        #     "title": "order_filled_accumulated_quantity",
-                        #     "value": self.order_filled_accumulated_quantity,
-                        # },
-                        # {
-                        #     "title": "order_trade_time",
-                        #     "value": self.order_trade_time,
-                        # },
                         {
                             "title": "price",
-                            "value": str(self.price) + ' USDT',
+                            "value": str(self.price) + " USDT",
                         },
-                        # {
-                        #     "title": "average_price",
-                        #     "value": self.average_price,
-                        # },
                         {
                             "title": "liq_amount_in_USDT",
-                            "value": str(int(self.order_quantity * self.average_price)) + ' USDT',
+                            "value": str(int(self.order_quantity * self.average_price))
+                            + " USDT",
                         },
-                    ]
+                    ],
                 }
             ]
         }
-        requests.post(webhook_url, json=data)
-
-
-liq = BinanceLiquidationFeeder()
-liq.ws.run_forever()
+        requests.post(self._slack_webhook_url, json=data)
