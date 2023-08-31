@@ -1,4 +1,5 @@
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110//)
+[![Github All Releases](https://img.shields.io/github/downloads/aoki-h-jp/binance-liquidation-feeder/total.svg)]()
 # binance-liquidation-feeder
 Notify liquidation on Binance.
 
